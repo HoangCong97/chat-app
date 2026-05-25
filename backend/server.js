@@ -25,7 +25,9 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(process.env.PORT, () => {
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => {
   console.log("Server running...");
 });
 
@@ -294,5 +296,15 @@ app.post("/conversation/:id/postMessage", async (req, res) => {
     res.status(500).json({
       error: "Lỗi post tin nhắn",
     });
+  }
+});
+
+app.get("/", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json(result.rows);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
   }
 });
