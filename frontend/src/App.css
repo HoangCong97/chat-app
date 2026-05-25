@@ -1,0 +1,129 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial;
+}
+
+body {
+  background: #f4f4f4;
+}
+
+.conversation-container {
+  display: flex;
+  flex-direction: column;
+  top: 0;
+  height: 100vh;
+  border: 2px solid black;
+}
+.conversation-header {
+  display: flex;
+  background-color: lightblue;
+  height: 5%;
+  box-shadow: 0px 2px 2px grey;
+  font-size: 200%;
+  justify-content: space-between;
+  padding: 1%;
+  z-index: 10;
+}
+
+.conversation-header-name {
+  color: black;
+  align-content: center;
+}
+
+.message-container {
+  display: flex;
+  flex-direction: column;
+  height: 70%;
+  width: 100%;
+  padding: 0px 8px;
+  padding-bottom: 16px;
+  overflow-y: scroll;
+  gap: 6px;
+  position: relative;
+}
+
+.message-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.message-container::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 10px;
+}
+
+.message-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.message {
+  display: flex;
+  width: 100%;
+}
+
+.message-me,
+.message-other {
+  border: 1px solid lightblue;
+  border-radius: 8px;
+
+  padding: 8px 12px;
+
+  max-width: 60%;
+  width: fit-content;
+
+  word-wrap: break-word;
+  background-color: white;
+}
+
+.message.me {
+  justify-content: flex-end;
+}
+
+.message.other {
+  justify-content: flex-start;
+}
+
+.conversation-messageBox-username {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: rgb(228, 152, 82);
+  font-size: 80%;
+}
+
+.conversation-messageBox-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: black;
+}
+
+.conversation-input {
+  height: 25%;
+  background-color: white;
+  font-size: large;
+  padding: 8px;
+}
+
+.scroll-down {
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  box-sizing: border-box;
+  border: 1px solid gray;
+  box-shadow: 0px 2px 2px gray;
+  border-radius: 50%;
+  bottom: 250px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  font-size: 30px;
+  font-weight: bold;
+  align-content: center;
+  cursor: pointer;
+}
+
+.scroll-down:active {
+  background-color: lightgray;
+}
