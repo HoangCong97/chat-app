@@ -11,6 +11,7 @@ function App() {
   const messageContainerRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
+  // const API = import.meta.env.API;
   const API = import.meta.env.API;
 
   const [messages, setMessages] = useState([]);
