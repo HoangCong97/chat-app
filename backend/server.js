@@ -12,7 +12,7 @@ app.use(express.json());
 
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000,
-  max: 1000,
+  max: 120,
   message: "Too many requests",
 });
 

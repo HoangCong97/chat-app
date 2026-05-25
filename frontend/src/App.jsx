@@ -3,9 +3,11 @@ import axios from "axios";
 import "./App.css";
 
 function App() {
-  const messageEndRef = useRef(null);
+  const firstLoadRef = useRef(true);
+  const messageEndRef = useRef(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messageContainerRef = useRef(null);
+  const lastMessageIdRef = useRef(null);
 
   const API = "http://localhost:5000";
   const [messages, setMessages] = useState([]);
@@ -13,17 +15,36 @@ function App() {
   const [username, setUsername] = useState(sessionStorage.getItem("username"));
   const [tempMessage, setTempMessage] = useState("");
 
+  // first time
+  useEffect(() => {
+    if (firstLoadRef.current === true && messages.length > 0) {
+      firstLoadRef.current = false;
+      messageEndRef.current?.scrollIntoView();
+    }
+  }, [messages]);
+
+  // Change account
   useEffect(() => {
     getConversation();
     const a = setInterval(() => getConversation(), 1000);
     return () => clearInterval(a);
   }, [username]);
 
+  // Auto scroll
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }, []);
+    if (messages.length === 0) return;
+
+    if (isAtBottom() !== true) return;
+
+    const lastMessage = messages[messages.length - 1];
+
+    if (lastMessage.id !== lastMessageIdRef.current) {
+      messageEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+      lastMessageIdRef.current = lastMessage.id;
+    }
+  }, [messages]);
 
   const updateUsername = (username) => {
     setUsername(username);
@@ -44,16 +65,22 @@ function App() {
     });
   };
 
-  const handleScroll = () => {
+  const isAtBottom = () => {
     const container = messageContainerRef.current;
-
     const distanceFromBottom =
       container.scrollHeight - container.scrollTop - container.clientHeight;
-
-    if (distanceFromBottom > 200) {
-      setShowScrollButton(true);
+    if (distanceFromBottom < 200) {
+      return true;
     } else {
+      return false;
+    }
+  };
+
+  const handleScroll = () => {
+    if (isAtBottom() === true) {
       setShowScrollButton(false);
+    } else {
+      setShowScrollButton(true);
     }
   };
 
@@ -96,6 +123,7 @@ function App() {
       >
         {messages.map((message) => (
           <div
+            key={message.id}
             className={`message ${message.username === username ? "me" : "other"}`}
           >
             <div className="message-me">
