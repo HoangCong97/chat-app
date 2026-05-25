@@ -1,11 +1,33 @@
 require("dotenv").config();
 
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const cors = require("cors");
 const pool = require("./db");
 const rateLimit = require("express-rate-limit");
 
 const app = express();
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
+
+server.listen(process.env.PORT, () => {
+  console.log("Server running...");
+});
 
 app.use(cors());
 app.use(express.json());
@@ -17,10 +39,6 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
-
-app.listen(process.env.PORT, () => {
-  console.log("Server running...");
-});
 
 app.get("/users", async (req, res) => {
   try {
@@ -207,28 +225,50 @@ app.get("/conversation/:id/messages", async (req, res) => {
 app.post("/conversation/:id/postMessage", async (req, res) => {
   try {
     const conversationId = 1;
-    const { username, content, created_at } = req.body;
-    console.log(req.body);
+
+    const { username, content } = req.body;
+
     const user = await pool.query(
       `
       SELECT *
       FROM users
-      where username = $1
+      WHERE username = $1
       `,
       [username],
     );
 
-    console.log(user.rows[0]);
-
     const result = await pool.query(
       `
-      INSERT INTO messages (conversation_id, sender_id, content)
+      INSERT INTO messages (
+        conversation_id,
+        sender_id,
+        content
+      )
       VALUES ($1, $2, $3)
+      RETURNING *
       `,
       [conversationId, user.rows[0].id, content],
     );
 
-    res.json(result.rows);
+    const message = await pool.query(
+      `
+      SELECT
+        messages.id,
+        messages.content,
+        messages.created_at,
+        users.username,
+        users.avatar_url
+      FROM messages
+      JOIN users
+      ON messages.sender_id = users.id
+      WHERE messages.id = $1
+      `,
+      [result.rows[0].id],
+    );
+
+    io.emit("receive_message", message.rows[0]);
+
+    res.json(message.rows[0]);
   } catch (err) {
     console.error(err);
 

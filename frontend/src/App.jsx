@@ -1,19 +1,33 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import "./App.css";
+import { io } from "socket.io-client";
+import { socket } from "./socket";
 
 function App() {
   const firstLoadRef = useRef(true);
-  const messageEndRef = useRef(true);
+  const messageEndRef = useRef(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messageContainerRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
   const API = "http://localhost:5000";
+
   const [messages, setMessages] = useState([]);
   const [conversationName, setConversationName] = useState("Công Message");
   const [username, setUsername] = useState(sessionStorage.getItem("username"));
   const [tempMessage, setTempMessage] = useState("");
+
+  // socket
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected");
+    });
+
+    return () => {
+      socket.off("connect");
+    };
+  }, []);
 
   // first time
   useEffect(() => {
@@ -26,8 +40,6 @@ function App() {
   // Change account
   useEffect(() => {
     getConversation();
-    const a = setInterval(() => getConversation(), 1000);
-    return () => clearInterval(a);
   }, [username]);
 
   // Auto scroll
@@ -45,6 +57,18 @@ function App() {
       lastMessageIdRef.current = lastMessage.id;
     }
   }, [messages]);
+
+  useEffect(() => {
+    const handler = (message) => {
+      setMessages((prev) => [...prev, message]);
+    };
+
+    socket.on("receive_message", handler);
+
+    return () => {
+      socket.off("receive_message", handler);
+    };
+  }, []);
 
   const updateUsername = (username) => {
     setUsername(username);
@@ -86,16 +110,13 @@ function App() {
 
   const postMessage = async () => {
     try {
-      const now = "2026-05-21T05:52:21.610Z";
       var api = API + "/conversation/1/postMessage";
       var content = tempMessage;
-      var created_at = now;
       const res = await axios.post(api, {
         username,
         content,
       });
       setTempMessage("");
-      await getConversation();
     } catch (error) {}
   };
 
