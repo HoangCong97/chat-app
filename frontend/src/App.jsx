@@ -77,8 +77,13 @@ function App() {
 
   const getConversation = async () => {
     try {
-      var api = API + "/conversation/1/messages";
-      const res = await axios.get(api);
+      var api = API + "/conversation/messages";
+      const res = await axios.get(api, {
+        params: {
+          conversation_id: 1,
+          username: username,
+        },
+      });
       setMessages(res.data);
     } catch (error) {}
   };

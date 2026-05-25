@@ -191,9 +191,22 @@ app.get("/profile", auth, async (req, res) => {
   });
 });
 
-app.get("/conversation/:id/messages", async (req, res) => {
+app.get("/conversation/messages", async (req, res) => {
   try {
-    const conversationId = 1;
+    const conversationId = req.query.conversation_id;
+    const username = req.query.username;
+
+    const user = await pool.query(
+      `SELECT * from users
+      WHERE username = $1`,
+      [username],
+    );
+
+    if (user.rows.length === 0) {
+      return res.status(401).json({
+        error: "Không tìm thấy user",
+      });
+    }
 
     const result = await pool.query(
       `
@@ -224,7 +237,7 @@ app.get("/conversation/:id/messages", async (req, res) => {
 
 app.post("/conversation/:id/postMessage", async (req, res) => {
   try {
-    const conversationId = 1;
+    const conversationId = req.params.id;
 
     const { username, content } = req.body;
 
@@ -236,6 +249,12 @@ app.post("/conversation/:id/postMessage", async (req, res) => {
       `,
       [username],
     );
+
+    if (user.rows.length === 0) {
+      return res.status(401).json({
+        error: "Không tìm thấy user",
+      });
+    }
 
     const result = await pool.query(
       `
