@@ -11,7 +11,7 @@ function App() {
   const messageContainerRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
-  const API = "http://localhost:5000";
+  const API = import.meta.env.API;
 
   const [messages, setMessages] = useState([]);
   const [conversationName, setConversationName] = useState("Công Message");
