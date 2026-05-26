@@ -31,7 +31,8 @@ function App() {
 
   useEffect(() => {
     const handler = (message) => {
-      setMessages(message);
+      if (message.username !== username)
+        setMessages((prev) => [...prev, message]);
     };
 
     socket.on("receive_message", handler);
