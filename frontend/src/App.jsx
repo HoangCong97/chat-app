@@ -145,7 +145,7 @@ function App() {
       <div className="conversation-header">
         <div className="conversation-header-name">{conversationName}</div>
         <input
-          className="conversation-header-name"
+          className="conversation-header-username"
           placeholder="Nhập single id"
           value={username}
           onChange={(e) => updateUsername(e.target.value)}
@@ -184,17 +184,22 @@ function App() {
         )}
         <div ref={messageEndRef}></div>
       </div>
-      <textarea
-        className="conversation-input"
-        value={tempMessage}
-        onChange={(e) => setTempMessage(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            postMessage();
-          }
-        }}
-      ></textarea>
+      <div className="conversation-input">
+        <textarea
+          className="input-form"
+          value={tempMessage}
+          onChange={(e) => setTempMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              postMessage();
+            }
+          }}
+        ></textarea>
+        <button className="input-sent-btn" onClick={postMessage}>
+          Gửi
+        </button>
+      </div>
     </div>
   );
 }
