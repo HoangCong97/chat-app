@@ -29,6 +29,18 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const handler = (message) => {
+      setMessages(message);
+    };
+
+    socket.on("receive_message", handler);
+
+    return () => {
+      socket.off("receive_message", handler);
+    };
+  }, []);
+
   // first time
   useEffect(() => {
     if (firstLoadRef.current === true && messages.length > 0) {
@@ -57,18 +69,6 @@ function App() {
       lastMessageIdRef.current = lastMessage.id;
     }
   }, [messages]);
-
-  useEffect(() => {
-    const handler = (message) => {
-      setMessages((prev) => [...prev, message]);
-    };
-
-    socket.on("receive_message", handler);
-
-    return () => {
-      socket.off("receive_message", handler);
-    };
-  }, []);
 
   const updateUsername = (username) => {
     setUsername(username);
@@ -114,15 +114,29 @@ function App() {
     }
   };
 
+  const createMessageCache = (content) => {
+    const maxId = Math.max(messages.map((msg) => msg.id)) + 1;
+    const created_at = new Date().toISOString();
+    const msg = {
+      id: maxId,
+      content: content,
+      created_at: created_at,
+      username: username,
+      avatar_url: "https://example.com/avatar1.png",
+    };
+    return msg;
+  };
+
   const postMessage = async () => {
     try {
       var api = API + "/conversation/1/postMessage";
       var content = tempMessage;
+      setMessages([...messages, createMessageCache(content)]);
+      setTempMessage("");
       const res = await axios.post(api, {
         username,
         content,
       });
-      setTempMessage("");
     } catch (error) {}
   };
 
