@@ -24,7 +24,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:5000/conversation/1/messages
+GET http://localhost:5000/conversation/messages?conversation_id=1&username=cong.hv2
 
 ###
 POST http://localhost:5000/conversation/1/postMessage

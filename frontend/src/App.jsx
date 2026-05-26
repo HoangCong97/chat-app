@@ -11,8 +11,7 @@ function App() {
   const messageContainerRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
-  // const API = import.meta.env.API;
-  const API = import.meta.env.API;
+  const API = import.meta.env.VITE_API_URL;
 
   const [messages, setMessages] = useState([]);
   const [conversationName, setConversationName] = useState("Công Message");
@@ -79,6 +78,7 @@ function App() {
   const getConversation = async () => {
     try {
       var api = API + "/conversation/messages";
+      console.log("API: " + API);
       const res = await axios.get(api, {
         params: {
           conversation_id: 1,
