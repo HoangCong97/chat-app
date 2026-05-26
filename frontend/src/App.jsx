@@ -116,10 +116,9 @@ function App() {
   };
 
   const createMessageCache = (content) => {
-    const maxId = Math.max(messages.map((msg) => msg.id)) + 1;
     const created_at = new Date().toISOString();
     const msg = {
-      id: maxId,
+      id: Date.now(),
       content: content,
       created_at: created_at,
       username: username,
@@ -190,7 +189,8 @@ function App() {
         value={tempMessage}
         onChange={(e) => setTempMessage(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
             postMessage();
           }
         }}
