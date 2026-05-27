@@ -17,6 +17,7 @@ function App() {
   const [conversationName, setConversationName] = useState("Công Message");
   const [username, setUsername] = useState(sessionStorage.getItem("username"));
   const [inputMessage, setInputMessage] = useState("");
+  const textareaRef = useRef(null);
 
   // socket
   useEffect(() => {
@@ -134,6 +135,7 @@ function App() {
       var content = inputMessage;
       setMessages([...messages, createMessageCache(content)]);
       setInputMessage("");
+      textareaRef.current.focus();
       const res = await axios.post(api, {
         username,
         content,
@@ -188,6 +190,7 @@ function App() {
       <div className="conversation-input">
         <textarea
           className="input-form"
+          ref={textareaRef}
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {
@@ -197,7 +200,13 @@ function App() {
             }
           }}
         ></textarea>
-        <button className="input-sent-btn" onClick={postMessage}>
+        <button
+          className="input-sent-btn"
+          onClick={(e) => {
+            e.preventDefault();
+            postMessage();
+          }}
+        >
           Gửi
         </button>
       </div>
