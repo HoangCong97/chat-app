@@ -122,7 +122,6 @@ body {
 
 .conversation-input {
   display: flex;
-  /* min-height: 60px; */
   justify-content: space-between;
   gap: 8px;
   background-color: transparent;
@@ -194,8 +193,10 @@ body {
   .conversation-input {
     display: flex;
     justify-content: space-between;
-    min-height: 100px;
+    gap: 8px;
     background-color: transparent;
     font-size: large;
+    padding: 8px;
+    align-items: end;
   }
 }
