@@ -291,7 +291,7 @@ app.post("/conversation/:id/postMessage", async (req, res) => {
       [result.rows[0].id],
     );
 
-    io.broadcast.emit("receive_message", message.rows[0]);
+    io.emit("receive_message", message.rows[0]);
 
     res.json(message.rows[0]);
   } catch (err) {
