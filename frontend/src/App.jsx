@@ -16,7 +16,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [conversationName, setConversationName] = useState("Công Message");
   const [username, setUsername] = useState(sessionStorage.getItem("username"));
-  const [tempMessage, setTempMessage] = useState("");
+  const [inputMessage, setInputMessage] = useState("");
 
   // socket
   useEffect(() => {
@@ -129,10 +129,11 @@ function App() {
 
   const postMessage = async () => {
     try {
+      if (inputMessage.trim() === "") return;
       var api = API + "/conversation/1/postMessage";
-      var content = tempMessage;
+      var content = inputMessage;
       setMessages([...messages, createMessageCache(content)]);
-      setTempMessage("");
+      setInputMessage("");
       const res = await axios.post(api, {
         username,
         content,
@@ -158,7 +159,7 @@ function App() {
         />
       </div>
       <div
-        className="message-container"
+        className="conversation-body"
         ref={messageContainerRef}
         onScroll={handleScroll}
       >
@@ -178,7 +179,7 @@ function App() {
           </div>
         ))}
         {showScrollButton && (
-          <button className="scroll-down" onClick={scrollDown}>
+          <button className="scroll-down-btn" onClick={scrollDown}>
             ↓
           </button>
         )}
@@ -187,8 +188,8 @@ function App() {
       <div className="conversation-input">
         <textarea
           className="input-form"
-          value={tempMessage}
-          onChange={(e) => setTempMessage(e.target.value)}
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();

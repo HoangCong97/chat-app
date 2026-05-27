@@ -43,7 +43,7 @@ body {
   font-size: 20px;
 }
 
-.message-container {
+.conversation-body {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -56,16 +56,16 @@ body {
   position: relative;
 }
 
-.message-container::-webkit-scrollbar {
+.conversation-body::-webkit-scrollbar {
   width: 4px;
 }
 
-.message-container::-webkit-scrollbar-thumb {
+.conversation-body::-webkit-scrollbar-thumb {
   background: #bbb;
   border-radius: 10px;
 }
 
-.message-container::-webkit-scrollbar-track {
+.conversation-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -115,9 +115,11 @@ body {
 .conversation-input {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
   min-height: 100px;
   background-color: transparent;
   font-size: large;
+  padding: 8px;
 }
 
 .input-form {
@@ -129,35 +131,47 @@ body {
 }
 
 .input-sent-btn {
-  padding: 8px;
-  border-radius: 16px;
+  padding: 12px;
+  border-radius: 40%;
   border: 1px solid #bbb;
-  margin: 8px;
   max-height: 50px;
   width: 50px;
   align-self: self-end;
+  font-size: 16px;
 }
 
-.scroll-down {
-  position: fixed;
+.input-sent-btn:hover {
+  background-color: rgba(187, 187, 187, 0.5);
+}
+
+.input-sent-btn:active {
+  background-color: #bbb;
+}
+
+.scroll-down-btn {
+  position: sticky;
   width: 50px;
   height: 50px;
   box-sizing: border-box;
-  border: 1px solid gray;
-  box-shadow: 0px 2px 2px gray;
+  border: 1px solid lightgrey;
+  box-shadow: 0px 2px 2px lightgray;
   border-radius: 50%;
-  bottom: 250px;
   left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: 0px;
+  padding: 6px;
+  transform: translate(-50%, 0);
   z-index: 100;
   font-size: 30px;
   font-weight: bold;
   align-content: center;
   cursor: pointer;
-  background-color: transparent;
 }
 
-.scroll-down:active {
+.scroll-down-btn:hover {
+  background-color: rgba(211, 211, 211, 0.5);
+}
+
+.scroll-down-btn:active {
   background-color: lightgray;
 }
 
