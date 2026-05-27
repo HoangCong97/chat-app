@@ -212,18 +212,21 @@ app.get("/conversation/messages", async (req, res) => {
 
     const result = await pool.query(
       `
-      SELECT
-        messages.id,
-        messages.content,
-        messages.created_at,
-        users.username,
-        users.avatar_url
-      FROM messages
-      JOIN users
-      ON messages.sender_id = users.id
-      WHERE messages.conversation_id = $1
-      ORDER BY messages.created_at ASC
-      LIMIT 100
+      SELECT * FROM (
+        SELECT
+          messages.id,
+          messages.content,
+          messages.created_at,
+          users.username,
+          users.avatar_url
+        FROM messages
+        JOIN users
+        ON messages.sender_id = users.id
+        WHERE messages.conversation_id = $1
+        ORDER BY messages.created_at DESC
+        LIMIT 100) 
+      AS latest_messages
+      ORDER BY created_at ASC
       `,
       [conversationId],
     );
