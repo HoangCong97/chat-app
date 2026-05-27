@@ -223,6 +223,7 @@ app.get("/conversation/messages", async (req, res) => {
       ON messages.sender_id = users.id
       WHERE messages.conversation_id = $1
       ORDER BY messages.created_at ASC
+      LIMIT 100
       `,
       [conversationId],
     );
