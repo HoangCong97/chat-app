@@ -109,3 +109,13 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text-h);
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}

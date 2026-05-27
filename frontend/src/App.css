@@ -163,6 +163,7 @@ body {
   z-index: 100;
   font-size: 30px;
   font-weight: bold;
+  font-family: var(--sans);
   align-content: center;
   cursor: pointer;
 }
