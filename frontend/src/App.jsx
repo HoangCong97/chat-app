@@ -40,7 +40,7 @@ function App() {
     return () => {
       socket.off("receive_message", handler);
     };
-  }, []);
+  }, [username]);
 
   // first time
   useEffect(() => {
