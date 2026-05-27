@@ -116,6 +116,13 @@ function App() {
     }
   };
 
+  const handleTextareaChange = () => {
+    const textarea = textareaRef.current;
+    textarea.style.height = "40px";
+    const height = Math.min(textarea.scrollHeight, 200);
+    textarea.style.height = height + 2 + "px";
+  };
+
   const createMessageCache = (content) => {
     const created_at = new Date().toISOString();
     const msg = {
@@ -192,11 +199,16 @@ function App() {
           className="input-form"
           ref={textareaRef}
           value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
+          onChange={(e) => {
+            setInputMessage(e.target.value);
+            handleTextareaChange();
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              postMessage();
+              postMessage(e);
+              e.target.value = "";
+              handleTextareaChange();
             }
           }}
         ></textarea>
@@ -204,7 +216,9 @@ function App() {
           className="input-sent-btn"
           onClick={(e) => {
             e.preventDefault();
-            postMessage();
+            postMessage(e);
+            e.target.value = "";
+            handleTextareaChange();
           }}
         >
           Gửi
