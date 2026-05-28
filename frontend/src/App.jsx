@@ -88,15 +88,17 @@ function App() {
   const getConversation = async () => {
     try {
       var api = API + "/conversation/messages";
-      console.log("API: " + API);
+      const token = sessionStorage.getItem("token");
       const res = await axios.get(api, {
         params: {
           conversation_id: 1,
-          username: username,
         },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setMessages(res.data);
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const scrollDown = async () => {
@@ -163,10 +165,6 @@ function App() {
       if (error.response) {
         const status = error.response.status;
         if (status === 401) {
-          setLoginError("Sai tên đăng nhập hoặc mật khẩu");
-        } else if (status === 400) {
-          setLoginError("Vui lòng nhập đầy đủ thông tin");
-        } else {
           setLoginError("Đăng nhập thất bại, vui lòng thử lại");
         }
       } else {
@@ -184,16 +182,29 @@ function App() {
   const postMessage = async () => {
     try {
       if (inputMessage.trim() === "") return;
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        setModalOpen(true);
+        return;
+      }
+
       var api = API + "/conversation/1/postMessage";
       var content = inputMessage;
       setMessages([...messages, createMessageCache(content)]);
       setInputMessage("");
       textareaRef.current.focus();
-      const res = await axios.post(api, {
-        username,
-        content,
-      });
-    } catch (error) {}
+      await axios.post(
+        api,
+        { content },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

@@ -214,20 +214,13 @@ app.get("/profile", auth, async (req, res) => {
   });
 });
 
-app.get("/conversation/messages", async (req, res) => {
+app.get("/conversation/messages", auth, async (req, res) => {
   try {
     const conversationId = req.query.conversation_id;
-    const username = req.query.username;
 
-    const user = await pool.query(
-      `SELECT * from users
-      WHERE username = $1`,
-      [username],
-    );
-
-    if (user.rows.length === 0) {
-      return res.status(404).json({
-        error: "Không tìm thấy user",
+    if (!conversationId) {
+      return res.status(400).json({
+        error: "Thiếu conversation_id",
       });
     }
 
@@ -262,24 +255,14 @@ app.get("/conversation/messages", async (req, res) => {
   }
 });
 
-app.post("/conversation/:id/postMessage", async (req, res) => {
+app.post("/conversation/:id/postMessage", auth, async (req, res) => {
   try {
     const conversationId = req.params.id;
+    const { content } = req.body;
 
-    const { username, content } = req.body;
-
-    const user = await pool.query(
-      `
-      SELECT *
-      FROM users
-      WHERE username = $1
-      `,
-      [username],
-    );
-
-    if (user.rows.length === 0) {
-      return res.status(401).json({
-        error: "Không tìm thấy user",
+    if (!content || content.trim() === "") {
+      return res.status(400).json({
+        error: "Thiếu nội dung tin nhắn",
       });
     }
 
@@ -293,7 +276,7 @@ app.post("/conversation/:id/postMessage", async (req, res) => {
       VALUES ($1, $2, $3)
       RETURNING *
       `,
-      [conversationId, user.rows[0].id, content],
+      [conversationId, req.user.userId, content],
     );
 
     const message = await pool.query(

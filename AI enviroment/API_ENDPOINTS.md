@@ -7,11 +7,13 @@
 ## 1. User Management
 
 ### `GET /users`
+
 Lấy danh sách tất cả users.
 
 **Headers**: Không yêu cầu auth.
 
 **Response** (200):
+
 ```json
 [
   {
@@ -28,9 +30,11 @@ Lấy danh sách tất cả users.
 ---
 
 ### `POST /register`
+
 Đăng ký tài khoản mới.
 
 **Request Body**:
+
 ```json
 {
   "username": "newuser",
@@ -39,6 +43,7 @@ Lấy danh sách tất cả users.
 ```
 
 **Response** (201):
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
@@ -51,15 +56,18 @@ Lấy danh sách tất cả users.
 ```
 
 **Error**:
+
 - 400: Thiếu username hoặc password
 - 409: Username đã tồn tại
 
 ---
 
 ### `POST /login`
+
 Đăng nhập với username và password.
 
 **Request Body**:
+
 ```json
 {
   "username": "hoang",
@@ -68,6 +76,7 @@ Lấy danh sách tất cả users.
 ```
 
 **Response** (200):
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
@@ -79,15 +88,18 @@ Lấy danh sách tất cả users.
 ```
 
 **Error**:
+
 - 400: Thiếu username hoặc password
 - 401: Sai username hoặc password
 
 ---
 
 ### `PUT /changePassword`
+
 Đổi mật khẩu.
 
 **Request Body**:
+
 ```json
 {
   "username": "hoang",
@@ -97,6 +109,7 @@ Lấy danh sách tất cả users.
 ```
 
 **Response** (200):
+
 ```json
 {
   "id": 1,
@@ -105,6 +118,7 @@ Lấy danh sách tất cả users.
 ```
 
 **Error**:
+
 - 400: Thiếu thông tin
 - 401: Sai username hoặc password
 
@@ -113,20 +127,28 @@ Lấy danh sách tất cả users.
 ## 2. Conversation & Messages
 
 ### `GET /conversation/messages`
+
 Lấy tin nhắn của một conversation.
+
+**Headers**:
+
+```
+Authorization: Bearer <token>
+```
 
 **Query Parameters**:
 | Param | Type | Mô tả |
 |-------|------|-------|
 | `conversation_id` | integer | ID của conversation |
-| `username` | string | Username để xác thực user tồn tại |
 
-**Example**: 
+**Example**:
+
 ```
-GET /conversation/messages?conversation_id=1&username=hoang
+GET /conversation/messages?conversation_id=1
 ```
 
 **Response** (200):
+
 ```json
 [
   {
@@ -140,12 +162,14 @@ GET /conversation/messages?conversation_id=1&username=hoang
 ```
 
 **Error**:
+
 - 404: Không tìm thấy user
 - 500: Lỗi lấy tin nhắn
 
 ---
 
 ### `POST /conversation/:id/postMessage`
+
 Gửi tin nhắn mới vào conversation.
 
 **Path Parameters**:
@@ -154,14 +178,15 @@ Gửi tin nhắn mới vào conversation.
 | `id` | integer | ID của conversation |
 
 **Request Body**:
+
 ```json
 {
-  "username": "hoang",
   "content": "Hello world!"
 }
 ```
 
 **Response** (200):
+
 ```json
 {
   "id": 10,
@@ -175,6 +200,7 @@ Gửi tin nhắn mới vào conversation.
 **Ghi chú**: Backend cũng sẽ emit event Socket.io `receive_message` tới tất cả clients (kể cả sender) sau khi insert thành công.
 
 **Error**:
+
 - 401: Không tìm thấy user
 - 500: Lỗi post tin nhắn
 
@@ -183,14 +209,17 @@ Gửi tin nhắn mới vào conversation.
 ## 3. Profile (cần auth)
 
 ### `GET /profile`
+
 Kiểm tra token và lấy thông tin user.
 
 **Headers**:
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response** (200):
+
 ```json
 {
   "message": "Đăng nhập thành công",
@@ -204,6 +233,7 @@ Authorization: Bearer <token>
 ```
 
 **Error**:
+
 - 401: Không có token hoặc Token không hợp lệ
 
 ---
@@ -211,9 +241,11 @@ Authorization: Bearer <token>
 ## 4. Health Check
 
 ### `GET /`
+
 Kiểm tra kết nối database.
 
 **Response** (200):
+
 ```json
 [
   {
@@ -227,5 +259,6 @@ Kiểm tra kết nối database.
 ---
 
 ## ⚠️ Rate Limiting
+
 - Giới hạn: **120 requests / 60 giây**
 - Vượt quá sẽ nhận response: `429 Too Many Requests`"

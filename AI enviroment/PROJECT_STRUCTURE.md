@@ -135,29 +135,32 @@ Web02_Messenger/
 
 ### REST API Endpoints (Backend)
 
-| Method | Endpoint                 | Description                            | Status                              |
-| ------ | ------------------------ | -------------------------------------- | ----------------------------------- |
-| GET    | `/users`                 | Get all users                          | ✅ Implemented                      |
-| POST   | `/register`              | Register new user (username, password) | ✅ Implemented                      |
-| POST   | `/login`                 | Login user (username, password)        | ✅ Implemented                      |
-| PUT    | `/changePassword`        | Change user password                   | ✅ Implemented (fixed SQL syntax)   |
-| GET    | `/conversation/messages` | Get messages for conversation          | ✅ Implemented                      |
-| POST   | `/conversation/:id/postMessage` | Send a new message              | ✅ Implemented                      |
-| GET    | `/profile`               | Get user profile (requires JWT token)  | ✅ Implemented                      |
-| GET    | `/`                      | Health check (DB connection)           | ✅ Implemented                      |
+| Method | Endpoint                        | Description                            | Status                            |
+| ------ | ------------------------------- | -------------------------------------- | --------------------------------- |
+| GET    | `/users`                        | Get all users                          | ✅ Implemented                    |
+| POST   | `/register`                     | Register new user (username, password) | ✅ Implemented                    |
+| POST   | `/login`                        | Login user (username, password)        | ✅ Implemented                    |
+| PUT    | `/changePassword`               | Change user password                   | ✅ Implemented (fixed SQL syntax) |
+| GET    | `/conversation/messages`        | Get messages for conversation          | ✅ Implemented                    |
+| POST   | `/conversation/:id/postMessage` | Send a new message                     | ✅ Implemented                    |
+| GET    | `/profile`                      | Get user profile (requires JWT token)  | ✅ Implemented                    |
+| GET    | `/`                             | Health check (DB connection)           | ✅ Implemented                    |
 
 **Rate Limiting**: 120 requests per 60 seconds (global limiter)
 
 ### Socket.io Events (Real-time)
 
 **Server emits**:
+
 - `receive_message` - khi có tin nhắn mới (gửi tới tất cả clients)
 
 **Server listens for**:
+
 - `connection` - when client connects
 - `disconnect` - when client disconnects
 
 **Current Implementation**:
+
 - Backend uses `io.emit("receive_message", message)` after inserting into DB
 - Frontend filters out own messages (by username) to avoid duplicates
 
@@ -183,11 +186,12 @@ Web02_Messenger/
 - **Scroll Position Detection**: Shows "scroll down" button when user scrolls up
 - **Session Management**: Retrieves username from sessionStorage
 - **Real-time Updates**: Listens to Socket.io `receive_message` event
-- **Message Fetching**: Calls `/conversation/messages` endpoint on component mount or username change
+- **Message Fetching**: Calls `/conversation/messages` endpoint on component mount or username change with `Authorization` header instead of username query
 - **Optimistic UI**: Immediately adds message to UI before POST returns
 - **Login Modal**: Popup để nhập username/password
 
 **Socket Connection**:
+
 - Frontend connects to `http://localhost:5000` (dev) or `https://chat-app-7vt9.onrender.com` (production)
 - Config trong `frontend/src/socket.js`
 
@@ -312,7 +316,7 @@ VITE_API_URL=http://localhost:5000 (dev)
 ### ✅ FIXED Issues
 
 1. **Duplicate Messages on First Send** (FIXED 2026-05-27):
-   - **Root Cause**: 
+   - **Root Cause**:
      - Frontend: `useEffect` for `receive_message` listener had empty dependency array `[]`
      - Backend: Used `io.emit()` sends to ALL clients including the sender
    - **Solution**:
@@ -363,13 +367,13 @@ VITE_API_URL=http://localhost:5000 (dev)
 
 ## 🤖 AI Environment Entry Points
 
-| File | Mô tả |
-|------|-------|
-| `UNIFIED_INTERFACE.md` | 🎯 Entry point chính, hướng dẫn nhanh cho AI |
-| `API_ENDPOINTS.md` | 📡 REST API reference với request/response mẫu |
-| `SOCKET_EVENTS.md` | 🔌 Socket.io events guide |
-| `ai_client.js` | 🤖 JavaScript helper module (có thể require/import) |
-| `CURL_EXAMPLES.md` | 🐚 Curl commands mẫu để test nhanh |
+| File                   | Mô tả                                               |
+| ---------------------- | --------------------------------------------------- |
+| `UNIFIED_INTERFACE.md` | 🎯 Entry point chính, hướng dẫn nhanh cho AI        |
+| `API_ENDPOINTS.md`     | 📡 REST API reference với request/response mẫu      |
+| `SOCKET_EVENTS.md`     | 🔌 Socket.io events guide                           |
+| `ai_client.js`         | 🤖 JavaScript helper module (có thể require/import) |
+| `CURL_EXAMPLES.md`     | 🐚 Curl commands mẫu để test nhanh                  |
 
 ---
 
