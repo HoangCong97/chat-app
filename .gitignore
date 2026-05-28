@@ -52,3 +52,5 @@ uploads/
 *.pid
 *.seed
 *.pid.lock
+
+socket.js
