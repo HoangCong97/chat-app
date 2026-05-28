@@ -19,6 +19,12 @@ function App() {
   const [inputMessage, setInputMessage] = useState("");
   const textareaRef = useRef(null);
 
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalUsername, setModalUsername] = useState("");
+  const [modalPassword, setModalPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
   // socket
   useEffect(() => {
     socket.on("connect", () => {
@@ -53,7 +59,9 @@ function App() {
 
   // Change account
   useEffect(() => {
-    getConversation();
+    if (username) {
+      getConversation();
+    }
   }, [username]);
 
   // Auto scroll
@@ -135,6 +143,44 @@ function App() {
     return msg;
   };
 
+  const handleLogin = async () => {
+    if (modalUsername.trim() === "") return;
+    setLoginError("");
+    try {
+      const api = API + "/login";
+      const res = await axios.post(api, {
+        username: modalUsername.trim(),
+        password: modalPassword,
+      });
+      // Success
+      const token = res.data.token;
+      sessionStorage.setItem("token", token);
+      updateUsername(modalUsername.trim());
+      setModalOpen(false);
+      setModalPassword("");
+      setLoginError("");
+    } catch (error) {
+      if (error.response) {
+        const status = error.response.status;
+        if (status === 401) {
+          setLoginError("Sai tên đăng nhập hoặc mật khẩu");
+        } else if (status === 400) {
+          setLoginError("Vui lòng nhập đầy đủ thông tin");
+        } else {
+          setLoginError("Đăng nhập thất bại, vui lòng thử lại");
+        }
+      } else {
+        setLoginError("Không thể kết nối đến máy chủ");
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setModalUsername("");
+    setModalPassword("");
+  };
+
   const postMessage = async () => {
     try {
       if (inputMessage.trim() === "") return;
@@ -154,18 +200,46 @@ function App() {
     <div className="conversation-container">
       <div className="conversation-header">
         <div className="conversation-header-name">{conversationName}</div>
-        <input
-          className="conversation-header-username"
-          placeholder="Nhập single id"
-          value={username}
-          onChange={(e) => updateUsername(e.target.value)}
-          onBlur={(e) => updateUsername(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              updateUsername(e.target.value);
-            }
+        <button
+          className="conversation-header-login"
+          onClick={() => {
+            setModalOpen(true);
+            setLoginError("");
           }}
-        />
+        >
+          {username ? username : "Đăng nhập"}
+        </button>
+
+        {modalOpen && (
+          <div className="login-container">
+            <div className="login-form">
+              <h3>Đăng nhập</h3>
+              <input
+                type="text"
+                placeholder="Single id"
+                value={modalUsername}
+                onChange={(e) => setModalUsername(e.target.value)}
+              />
+              <input
+                type="password"
+                placeholder="Mật khẩu"
+                value={modalPassword}
+                onChange={(e) => setModalPassword(e.target.value)}
+              />
+              {loginError && <span className="login-error">{loginError}</span>}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.5rem",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button onClick={handleLogin}>Đăng nhập</button>
+                <button onClick={handleCloseModal}>Đóng</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <div
         className="conversation-body"

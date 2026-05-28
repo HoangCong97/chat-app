@@ -6,6 +6,8 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const pool = require("./db");
 const rateLimit = require("express-rate-limit");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
@@ -58,16 +60,35 @@ app.get("/users", async (req, res) => {
 app.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: "Thiếu username hoặc password" });
+    }
+    // Check if username already exists
+    const existing = await pool.query(
+      "SELECT id FROM users WHERE username = $1",
+      [username],
+    );
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: "Username đã tồn tại" });
+    }
     const hash = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `
-            INSERT INTO users (username, password_hash)
-            VALUES ($1, $2)
-            RETURNING id, username
-            `,
+      INSERT INTO users (username, password_hash)
+      VALUES ($1, $2)
+      RETURNING id, username, created_at
+      `,
       [username, hash],
     );
-    res.json(result.rows[0]);
+    const token = jwt.sign(
+      { userId: result.rows[0].id, username: result.rows[0].username },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+    res.status(201).json({
+      token,
+      user: result.rows[0],
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({
@@ -79,25 +100,25 @@ app.post("/register", async (req, res) => {
 app.put("/changePassword", async (req, res) => {
   try {
     const { username, oldPassword, newPassword } = req.body;
-
-    user = checkValidUser(username, oldPassword);
-    if (user === null) {
+    if (!username || !oldPassword || !newPassword) {
+      return res.status(400).json({ error: "Thiếu thông tin" });
+    }
+    const user = await checkValidUser(username, oldPassword);
+    if (!user) {
       return res.status(401).json({
         error: "Sai username hoặc password",
       });
     }
-
-    const password_hash = await bcrypt.hash(newPassword, 10);
+    const hash = await bcrypt.hash(newPassword, 10);
     const result = await pool.query(
       `
-            UPDATE INTO users (password_hash)
-            VALUES ($1)
-            WHERE id = $2
-            RETURNING id, username
-            `,
-      [password_hash, user.id],
+      UPDATE users
+      SET password_hash = $1
+      WHERE id = $2
+      RETURNING id, username
+      `,
+      [hash, user.id],
     );
-
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -110,16 +131,19 @@ app.put("/changePassword", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    if (checkValidUser(username, password) === false) {
+    if (!username || !password) {
+      return res.status(400).json({ error: "Thiếu username hoặc password" });
+    }
+    const user = await checkValidUser(username, password);
+    if (!user) {
       return res.status(401).json({
         error: "Sai username hoặc password",
       });
     }
-
     const token = jwt.sign(
       {
         userId: user.id,
+        username: user.username,
       },
       process.env.JWT_SECRET,
       {
@@ -142,7 +166,6 @@ app.post("/login", async (req, res) => {
 });
 
 async function checkValidUser(username, password) {
-  const bcrypt = require("bcrypt");
   const result = await pool.query(`SELECT * FROM users where username = $1`, [
     username,
   ]);
@@ -159,8 +182,6 @@ async function checkValidUser(username, password) {
   }
   return user;
 }
-
-const jwt = require("jsonwebtoken");
 
 function auth(req, res, next) {
   try {
