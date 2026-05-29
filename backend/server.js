@@ -8,6 +8,9 @@ const pool = require("./db");
 const rateLimit = require("express-rate-limit");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 
@@ -35,6 +38,40 @@ server.listen(PORT, () => {
 
 app.use(cors());
 app.use(express.json());
+
+// ========== Multer Config for Image Upload ==========
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Chỉ chấp nhận file ảnh (image/*)"), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+// Serve uploaded images statically
+app.use("/uploads", express.static(uploadsDir));
 
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000,
@@ -230,6 +267,8 @@ app.get("/conversation/messages", auth, async (req, res) => {
         SELECT
           messages.id,
           messages.content,
+          messages.message_type,
+          messages.image_url,
           messages.created_at,
           users.username,
           users.avatar_url
@@ -238,7 +277,7 @@ app.get("/conversation/messages", auth, async (req, res) => {
         ON messages.sender_id = users.id
         WHERE messages.conversation_id = $1
         ORDER BY messages.created_at DESC
-        LIMIT 100) 
+        LIMIT 100)
       AS latest_messages
       ORDER BY created_at ASC
       `,
@@ -255,14 +294,43 @@ app.get("/conversation/messages", auth, async (req, res) => {
   }
 });
 
+// ========== Image Upload ==========
+app.post("/upload", auth, (req, res) => {
+  upload.single("image")(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({ error: "File quá lớn, tối đa 5MB" });
+        }
+        return res.status(400).json({ error: err.message });
+      }
+      return res.status(400).json({ error: err.message });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: "Thiếu file ảnh" });
+    }
+
+    const imageUrl = "/uploads/" + req.file.filename;
+    res.json({ image_url: imageUrl });
+  });
+});
+
 app.post("/conversation/:id/postMessage", auth, async (req, res) => {
   try {
     const conversationId = req.params.id;
-    const { content } = req.body;
+    const { content, type, image_url } = req.body;
+    const messageType = type || "text";
 
-    if (!content || content.trim() === "") {
+    // Validate: text messages need content, image messages need image_url
+    if (messageType === "text" && (!content || content.trim() === "")) {
       return res.status(400).json({
         error: "Thiếu nội dung tin nhắn",
+      });
+    }
+    if (messageType === "image" && !image_url) {
+      return res.status(400).json({
+        error: "Thiếu image_url cho tin nhắn ảnh",
       });
     }
 
@@ -271,12 +339,14 @@ app.post("/conversation/:id/postMessage", auth, async (req, res) => {
       INSERT INTO messages (
         conversation_id,
         sender_id,
-        content
+        content,
+        message_type,
+        image_url
       )
-      VALUES ($1, $2, $3)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
       `,
-      [conversationId, req.user.userId, content],
+      [conversationId, req.user.userId, content || null, messageType, image_url || null],
     );
 
     const message = await pool.query(
@@ -284,6 +354,8 @@ app.post("/conversation/:id/postMessage", auth, async (req, res) => {
       SELECT
         messages.id,
         messages.content,
+        messages.message_type,
+        messages.image_url,
         messages.created_at,
         users.username,
         users.avatar_url

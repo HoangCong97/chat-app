@@ -22,14 +22,29 @@ socket.on("connect", () => {
 ---
 
 ### `receive_message`
-Khi có tin nhắn mới được gửi vào conversation.
+Khi có tin nhắn mới được gửi vào conversation. Hỗ trợ cả text và ảnh.
 
-**Payload**:
+**Payload (text message)**:
 ```json
 {
   "id": 10,
   "content": "Hello world!",
+  "message_type": "text",
+  "image_url": null,
   "created_at": "2026-05-27T10:05:00.000Z",
+  "username": "hoang",
+  "avatar_url": null
+}
+```
+
+**Payload (image message)**:
+```json
+{
+  "id": 11,
+  "content": null,
+  "message_type": "image",
+  "image_url": "/uploads/1717000000000-123456789.png",
+  "created_at": "2026-05-28T10:05:00.000Z",
   "username": "hoang",
   "avatar_url": null
 }

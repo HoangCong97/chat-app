@@ -29,7 +29,9 @@ CREATE TABLE messages (
     conversation_id INT REFERENCES conversations(id) ON DELETE CASCADE,
     sender_id INT REFERENCES users(id) ON DELETE CASCADE,
 
-    content TEXT NOT NULL,
+    content TEXT,
+    message_type VARCHAR(10) DEFAULT 'text',
+    image_url TEXT,
 
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -43,3 +45,4 @@ CREATE TABLE message_reads (
 )
 
 -- psql -U postgres -d chat_app -f db.init.sql
+-- Migration for existing DBs: run "node migrate_image_support.js" instead

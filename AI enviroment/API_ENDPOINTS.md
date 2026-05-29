@@ -124,11 +124,11 @@ Lấy danh sách tất cả users.
 
 ---
 
-## 2. Conversation & Messages
+## 2. Conversation & Messages (updated for images)
 
 ### `GET /conversation/messages`
 
-Lấy tin nhắn của một conversation.
+Lấy tin nhắn của một conversation (hỗ trợ text và ảnh).
 
 **Headers**:
 
@@ -154,7 +154,18 @@ GET /conversation/messages?conversation_id=1
   {
     "id": 1,
     "content": "Chào bạn",
+    "message_type": "text",
+    "image_url": null,
     "created_at": "2026-05-21T03:30:00.000Z",
+    "username": "hoang",
+    "avatar_url": null
+  },
+  {
+    "id": 2,
+    "content": null,
+    "message_type": "image",
+    "image_url": "/uploads/1717000000000-123456789.png",
+    "created_at": "2026-05-21T03:31:00.000Z",
     "username": "hoang",
     "avatar_url": null
   }
@@ -170,27 +181,42 @@ GET /conversation/messages?conversation_id=1
 
 ### `POST /conversation/:id/postMessage`
 
-Gửi tin nhắn mới vào conversation.
+Gửi tin nhắn mới vào conversation (hỗ trợ text và ảnh).
 
 **Path Parameters**:
 | Param | Type | Mô tả |
 |-------|------|-------|
 | `id` | integer | ID của conversation |
 
-**Request Body**:
+**Request Body (text)**:
 
 ```json
 {
+  "type": "text",
   "content": "Hello world!"
 }
 ```
 
-**Response** (200):
+**Request Body (image)**:
+
+```json
+{
+  "type": "image",
+  "image_url": "/uploads/1717000000000-123456789.png",
+  "content": "Ảnh nè!"
+}
+```
+
+> `content` là optional khi gửi ảnh (có thể kèm caption hoặc null). Mặc định `type` = "text".
+
+**Response (200)**:
 
 ```json
 {
   "id": 10,
   "content": "Hello world!",
+  "message_type": "text",
+  "image_url": null,
   "created_at": "2026-05-27T10:05:00.000Z",
   "username": "hoang",
   "avatar_url": null
@@ -201,12 +227,47 @@ Gửi tin nhắn mới vào conversation.
 
 **Error**:
 
-- 401: Không tìm thấy user
+- 400: Thiếu nội dung (text) hoặc thiếu image_url (image)
+- 401: Không có token hoặc token không hợp lệ
 - 500: Lỗi post tin nhắn
 
 ---
 
-## 3. Profile (cần auth)
+## 3. Image Upload
+
+### `POST /upload`
+
+Upload file ảnh. Ảnh được lưu vào thư mục `backend/uploads/` và phục vụ static qua `/uploads/<filename>`.
+
+**Headers**:
+
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Form Data**:
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `image` | file | File ảnh, tối đa 5MB, chỉ chấp nhận image/* |
+
+**Response** (200):
+
+```json
+{
+  "image_url": "/uploads/1717000000000-123456789.png"
+}
+```
+
+**Error**:
+
+- 400: File quá lớn (>5MB), Thiếu file ảnh, hoặc không đúng định dạng ảnh
+- 401: Token không hợp lệ
+
+---
+
+## 4. Profile (cần auth)
 
 ### `GET /profile`
 
@@ -238,7 +299,7 @@ Authorization: Bearer <token>
 
 ---
 
-## 4. Health Check
+## 5. Health Check
 
 ### `GET /`
 

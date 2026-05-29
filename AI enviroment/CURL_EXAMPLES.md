@@ -71,14 +71,44 @@ curl -X GET "http://localhost:5000/conversation/messages?conversation_id=1" \
 
 ---
 
-## 8. Gửi tin nhắn mới
+## 8. Gửi tin nhắn mới (text)
 
 ```bash
 curl -X POST http://localhost:5000/conversation/1/postMessage \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <TOKEN_HERE>" \
-  -d '{"content": "Hello từ curl!"}'
+  -d '{"type": "text", "content": "Hello từ curl!"}'
 ```
+
+---
+
+## 9. Upload ảnh
+
+```bash
+curl -X POST http://localhost:5000/upload \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -F "image=@/path/to/your/image.png"
+```
+
+_Thay `/path/to/your/image.png` bằng đường dẫn tới file ảnh thật._
+
+Response:
+```json
+{"image_url": "/uploads/1717000000000-123456789.png"}
+```
+
+---
+
+## 10. Gửi tin nhắn ảnh
+
+```bash
+curl -X POST http://localhost:5000/conversation/1/postMessage \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -d '{"type": "image", "image_url": "/uploads/1717000000000-123456789.png", "content": "Ảnh nè!"}'
+```
+
+> `content` là optional, có thể để `null` nếu không cần caption.
 
 ---
 

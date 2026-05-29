@@ -121,10 +121,12 @@ Sau khi thay đổi code, AI phải tự động:
 
 ### Các thay đổi gần đây
 
-- **Backend**: Đã thêm `bcrypt`, `jsonwebtoken`; thêm endpoints `/login`, `/profile`; sửa lỗi SQL tại `/changePassword`; sửa `io.emit` thành `io.broadcast.emit` khi nhận tin nhắn mới.
-- **Frontend**: Thay input username trực tiếp bằng Login Modal (text + password); đổi class `conversation-header-username` thành `conversation-header-login`; chuyển socket URL về localhost.
+- **Frontend (2026-05-29) - Phase 2**: Thêm UI upload ảnh (nút 🖼️, preview ảnh, upload qua `/upload`); hiển thị ảnh trong chat (render `<img>` khi `message_type === "image"`, click để phóng to); fix postMessage response handling (optimistic message được thay thế bằng dữ liệu thực từ server); thêm CSS cho image message, image preview, upload button, sending indicator; `createMessageCache` hỗ trợ `messageType` và `imageUrl`; placeholder textarea thay đổi khi có ảnh được chọn.
+- **Backend (2026-05-29)**: Đã thêm `multer` package; thêm endpoint `POST /upload` (auth, multer, giới hạn 5MB, image/*); cập nhật `POST /conversation/:id/postMessage` hỗ trợ `type` và `image_url`; cập nhật `GET /conversation/messages` trả về `message_type` và `image_url`; thêm static serving cho thư mục `uploads/`; cập nhật schema `messages` table với `message_type` và `image_url`.
+- **Backend (trước)**: Đã thêm `bcrypt`, `jsonwebtoken`; thêm endpoints `/login`, `/profile`; sửa lỗi SQL tại `/changePassword`; sửa `io.emit` thành `io.broadcast.emit` khi nhận tin nhắn mới.
+- **Frontend (trước)**: Thay input username trực tiếp bằng Login Modal (text + password); đổi class `conversation-header-username` thành `conversation-header-login`; chuyển socket URL về localhost.
 - **Project Structure**: File `PROJECT_STRUCTURE.md` ở root đã được xóa; tất cả tài liệu tập trung vào thư mục `AI enviroment/`.
-- **Known Issues đã fix**: SQL error `/changePassword`, thiếu `/login` endpoint.
-- **Known Issues chưa fix**: Frontend không xử lý response sau `postMessage`, chưa có JWT token management trên frontend.
+- **Known Issues đã fix**: SQL error `/changePassword`, thiếu `/login` endpoint, Frontend không xử lý response sau `postMessage`, chưa có UI upload ảnh.
+- **Known Issues chưa fix**: Chưa có JWT token management hoàn chỉnh trên frontend (vẫn dùng sessionStorage), chưa có register UI, chưa có typing indicators/online status.
 
 _(Phần này sẽ được AI cập nhật sau mỗi lần sửa code)_"

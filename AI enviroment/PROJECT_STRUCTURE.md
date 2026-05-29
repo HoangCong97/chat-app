@@ -18,6 +18,8 @@
 - **Authentication**:
   - JWT (jsonwebtoken v9.0.3) - cho token-based auth
   - bcrypt v6.0.0 - mã hóa password
+- **File Upload**:
+  - multer - upload file ảnh (tối đa 5MB, image/*)
 - **Security**:
   - CORS v2.8.6 - cross-origin requests
   - express-rate-limit v8.5.2 - rate limiting (120 requests/minute)
@@ -51,6 +53,8 @@ Web02_Messenger/
 │   ├── server.js              # Main server file - Express app, Socket.io setup, API endpoints
 │   ├── db.js                  # PostgreSQL connection pool (pg module)
 │   ├── db.init.sql            # Database schema & initialization (run once)
+│   ├── migrate_image_support.js  # Migration script: add message_type + image_url to messages
+│   ├── uploads/               # Uploaded images (created automatically)
 │   ├── package.json           # Backend dependencies
 │   └── .env                   # Environment variables (DATABASE_URL, PORT, etc.)
 │
@@ -116,7 +120,9 @@ Web02_Messenger/
 - id (SERIAL PRIMARY KEY)
 - conversation_id (INT, FK → conversations.id)
 - sender_id (INT, FK → users.id)
-- content (TEXT)
+- content (TEXT, nullable) - text content (null for image-only messages)
+- message_type (VARCHAR(10), DEFAULT 'text') - 'text' or 'image'
+- image_url (TEXT, nullable) - path to uploaded image (e.g., /uploads/xxx.png)
 - created_at (TIMESTAMP DEFAULT NOW())
 ```
 
@@ -135,16 +141,17 @@ Web02_Messenger/
 
 ### REST API Endpoints (Backend)
 
-| Method | Endpoint                        | Description                            | Status                            |
-| ------ | ------------------------------- | -------------------------------------- | --------------------------------- |
-| GET    | `/users`                        | Get all users                          | ✅ Implemented                    |
-| POST   | `/register`                     | Register new user (username, password) | ✅ Implemented                    |
-| POST   | `/login`                        | Login user (username, password)        | ✅ Implemented                    |
-| PUT    | `/changePassword`               | Change user password                   | ✅ Implemented (fixed SQL syntax) |
-| GET    | `/conversation/messages`        | Get messages for conversation          | ✅ Implemented                    |
-| POST   | `/conversation/:id/postMessage` | Send a new message                     | ✅ Implemented                    |
-| GET    | `/profile`                      | Get user profile (requires JWT token)  | ✅ Implemented                    |
-| GET    | `/`                             | Health check (DB connection)           | ✅ Implemented                    |
+| Method | Endpoint                        | Description                                    | Status                            |
+| ------ | ------------------------------- | ---------------------------------------------- | --------------------------------- |
+| GET    | `/users`                        | Get all users                                  | ✅ Implemented                    |
+| POST   | `/register`                     | Register new user (username, password)         | ✅ Implemented                    |
+| POST   | `/login`                        | Login user (username, password)                | ✅ Implemented                    |
+| PUT    | `/changePassword`               | Change user password                           | ✅ Implemented (fixed SQL syntax) |
+| GET    | `/conversation/messages`        | Get messages for conversation (text + images)  | ✅ Implemented                    |
+| POST   | `/conversation/:id/postMessage` | Send a new message (text or image)             | ✅ Implemented                    |
+| POST   | `/upload`                       | Upload image file (multipart, 5MB max)         | ✅ Implemented                    |
+| GET    | `/profile`                      | Get user profile (requires JWT token)          | ✅ Implemented                    |
+| GET    | `/`                             | Health check (DB connection)                   | ✅ Implemented                    |
 
 **Rate Limiting**: 120 requests per 60 seconds (global limiter)
 
@@ -187,8 +194,11 @@ Web02_Messenger/
 - **Session Management**: Retrieves username from sessionStorage
 - **Real-time Updates**: Listens to Socket.io `receive_message` event
 - **Message Fetching**: Calls `/conversation/messages` endpoint on component mount or username change with `Authorization` header instead of username query
-- **Optimistic UI**: Immediately adds message to UI before POST returns
+- **Optimistic UI**: Immediately adds message to UI before POST returns, then replaces optimistic message with real server response
 - **Login Modal**: Popup để nhập username/password
+- **Image Upload**: Nút 🖼️ để chọn ảnh, preview trước khi gửi, upload qua `/upload` endpoint
+- **Image Display**: Hiển thị ảnh trong chat khi `message_type === "image"`, click để phóng to/thu nhỏ
+- **Sending Indicator**: Hiển thị "Đang gửi..." trên optimistic messages
 
 **Socket Connection**:
 
@@ -222,7 +232,10 @@ JWT_SECRET=your_secret_key
 # 3. Initialize database (run once):
 psql -U postgres -d chat_app -f db.init.sql
 
-# 4. Start server (development with nodemon):
+# 4. Run migrations (for image support):
+node migrate_image_support.js
+
+# 5. Start server (development with nodemon):
 npm run dev
 
 # Or start for production:
@@ -270,10 +283,14 @@ npm run preview
 - Profile endpoint (JWT protected)
 - Frontend message display with Socket.io integration
 - Session-based authentication (username stored in sessionStorage)
-- Real-time message broadcasting (io.emit with frontend filtering)
-- Optimistic UI for sent messages
+- Real-time message broadcasting (io.broadcast.emit)
+- Optimistic UI for sent messages (with real server response replacement)
 - Rate limiting on API
 - CORS configuration
+- Image upload backend API (`POST /upload`)
+- Frontend image upload UI (🖼️ button, preview, upload to /upload)
+- Image display in chat (renders `<img>` for `message_type: "image"`)
+- postMessage response handling: optimistic message replaced by server response
 
 ### ⚠️ In Progress / Incomplete
 
@@ -288,7 +305,6 @@ npm run preview
 - Typing indicators
 - User presence/online status
 - Message read receipts
-- File/media sharing
 
 ---
 
@@ -330,14 +346,9 @@ VITE_API_URL=http://localhost:5000 (dev)
 
 ### ⚠️ Outstanding Issues
 
-1. **Frontend Not Handling Response**:
-   - After `postMessage`, frontend doesn't process the axios response
-   - Currently uses optimistic UI (adds message immediately) and ignores response
-   - Can be enhanced: user's own message can come from response, others from socket
-
-2. **No proper login UI**:
-   - Login modal only stores username, no JWT token management yet
-   - Frontend doesn't use tokens; still relies on sessionStorage username
+1. **No proper login UI**:
+   - Login modal stores username in sessionStorage, JWT token stored for API calls
+   - Frontend uses tokens for authenticated endpoints; non-auth fallback for message fetching
 
 ---
 
@@ -377,4 +388,4 @@ VITE_API_URL=http://localhost:5000 (dev)
 
 ---
 
-_Document created to provide AI with comprehensive project context. Last updated: 2026-05-27_
+_Document created to provide AI with comprehensive project context. Last updated: 2026-05-29 (Phase 2)_

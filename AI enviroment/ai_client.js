@@ -132,15 +132,56 @@ async function getMessages(conversationId, username) {
 }
 
 /**
- * Gửi tin nhắn mới
+ * Upload ảnh lên server (cần token)
+ * @param {string} token - JWT token
+ * @param {File|Blob} imageFile - File ảnh từ input type="file"
+ * @returns {Promise<{image_url: string}>}
+ */
+async function uploadImage(token, imageFile) {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+
+  const response = await fetch(`${API_BASE}/upload`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const error = new Error(data.error || `HTTP ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Gửi tin nhắn mới (hỗ trợ text và ảnh)
  * @param {number} conversationId
- * @param {string} username
- * @param {string} content
+ * @param {string} token - JWT token
+ * @param {object} options - { content, type, image_url }
+ * @param {string} [options.content] - Nội dung text (optional nếu type=image)
+ * @param {string} [options.type] - "text" hoặc "image", mặc định "text"
+ * @param {string} [options.image_url] - URL ảnh (required nếu type=image)
  * @returns {Promise<object>} Message object
  */
-async function postMessage(conversationId, username, content) {
+async function postMessage(conversationId, token, options = {}) {
+  const { content, type = "text", image_url } = options;
+  const body = { type };
+  if (content !== undefined) body.content = content;
+  if (image_url !== undefined) body.image_url = image_url;
+
   return request("POST", `/conversation/${conversationId}/postMessage`, {
-    body: { username, content },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body,
   });
 }
 
@@ -161,6 +202,7 @@ module.exports = {
   changePassword,
   getProfile,
   getMessages,
+  uploadImage,
   postMessage,
   healthCheck,
   request, // raw request method
